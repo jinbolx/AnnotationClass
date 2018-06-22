@@ -21,7 +21,9 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.util.Elements;
 import javax.tools.JavaFileObject;
-@SupportedAnnotationTypes({"com.jinbolx.ioc_annotation.BindView","com.jinbolx.ioc_annotation.OnClick"})
+
+@SupportedAnnotationTypes({"com.jinbolx.ioc_annotation.BindView",
+        "com.jinbolx.ioc_annotation.OnClick"})
 @SupportedSourceVersion(SourceVersion.RELEASE_7)
 @AutoService(Processor.class)
 public class InjectViewProcessor extends AbstractProcessor {
@@ -50,20 +52,29 @@ public class InjectViewProcessor extends AbstractProcessor {
             }
             proxy.idMap.put(ve, id);
         }
-        if (onClickElements.size()>1){
+        if (onClickElements.size() > 1) {
             try {
                 throw new Exception("only one onClick annotation can be used in a Java class");
             } catch (Exception e) {
                 e.printStackTrace();
             }
-        }else {
-            Element onClickElement=null;
+        } else {
+            Element onClickElement = null;
             for (Element e :
                     onClickElements) {
-                onClickElement=e;
+                onClickElement = e;
             }
-            if (onClickElement!=null){
-
+            if (onClickElement != null) {
+                VariableElement ve = ((VariableElement) onClickElement);
+                TypeElement te = ((TypeElement) ve.getEnclosingElement());
+                OnClick onClickAnnotation = onClickElement.getAnnotation(OnClick.class);
+                int[] ids = onClickAnnotation.value();
+                Proxy proxy = proxyHashMap.get(te);
+                if (proxy != null) {
+                    for (int id : ids) {
+                        proxy.getList().add(id);
+                    }
+                }
             }
 
         }

@@ -1,6 +1,8 @@
 package com.jinbolx.ioc_processor;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
@@ -13,13 +15,20 @@ public class Proxy {
     private static final String SUFFIX = "ViewInjector";
     private static final String SYMBOL = "$$";
     public Map<VariableElement, Integer> idMap = new HashMap<>();
+    public List<Integer> list=new ArrayList<>();
 
     Proxy(Elements elements, TypeElement typeElement) {
         this.typeElement = typeElement;
         packageName = elements.getPackageOf(typeElement).getQualifiedName().toString();
     }
 
+    public void setList(List<Integer> list) {
+        this.list = list;
+    }
 
+    public List<Integer> getList() {
+        return list;
+    }
 
     public String generateClass(StringBuilder builder) {
         builder.append("//Generate Code by BindView. Do not modify it!")
