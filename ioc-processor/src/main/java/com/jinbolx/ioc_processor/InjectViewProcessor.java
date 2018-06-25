@@ -5,7 +5,9 @@ import com.jinbolx.ioc_annotation.BindView;
 import com.jinbolx.ioc_annotation.OnClick;
 import java.io.IOException;
 import java.io.Writer;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.annotation.processing.AbstractProcessor;
@@ -50,34 +52,27 @@ public class InjectViewProcessor extends AbstractProcessor {
                 proxy = new Proxy(elementsUtils, te);
                 proxyHashMap.put(te, proxy);
             }
-            proxy.idMap.put(ve, id);
+            proxy.idMap.put(id, ve);
         }
-        if (onClickElements.size() > 1) {
-            try {
-                throw new Exception("only one onClick annotation can be used in a Java class");
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        } else {
-            Element onClickElement = null;
-            for (Element e :
-                    onClickElements) {
-                onClickElement = e;
-            }
-            if (onClickElement != null) {
-                VariableElement ve = ((VariableElement) onClickElement);
-                TypeElement te = ((TypeElement) ve.getEnclosingElement());
+
+        for (Element onClickElement :
+                onClickElements) {
+            if (onClickElement != null ) {
+                String methodName = onClickElement.getSimpleName().toString();
+                TypeElement typeElement= (TypeElement) onClickElement.getEnclosingElement();
                 OnClick onClickAnnotation = onClickElement.getAnnotation(OnClick.class);
                 int[] ids = onClickAnnotation.value();
-                Proxy proxy = proxyHashMap.get(te);
+                Proxy proxy = proxyHashMap.get(typeElement);
+                List<Integer> list = new ArrayList<>();
                 if (proxy != null) {
                     for (int id : ids) {
-                        proxy.getList().add(id);
+                        list.add(id);
                     }
+                    proxy.onclickMap.put(methodName, list);
                 }
             }
-
         }
+
         for (TypeElement te :
                 proxyHashMap.keySet()) {
             Proxy proxy = proxyHashMap.get(te);

@@ -1,6 +1,5 @@
 package com.jinbolx.ioc_processor;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -14,21 +13,13 @@ public class Proxy {
     private TypeElement typeElement;
     private static final String SUFFIX = "ViewInjector";
     private static final String SYMBOL = "$$";
-    public Map<VariableElement, Integer> idMap = new HashMap<>();
-    public List<Integer> list=new ArrayList<>();
-
+    public Map<Integer, VariableElement> idMap = new HashMap<>();
+    public Map<String,List<Integer>> onclickMap=new HashMap<>();
     Proxy(Elements elements, TypeElement typeElement) {
         this.typeElement = typeElement;
         packageName = elements.getPackageOf(typeElement).getQualifiedName().toString();
     }
 
-    public void setList(List<Integer> list) {
-        this.list = list;
-    }
-
-    public List<Integer> getList() {
-        return list;
-    }
 
     public String generateClass(StringBuilder builder) {
         builder.append("//Generate Code by BindView. Do not modify it!")
@@ -48,18 +39,20 @@ public class Proxy {
     }
 
     private void generateUsefulMethod(StringBuilder builder) {
-        generateBindViewMethod(builder);
-        generateOnclickMethod(builder);
-    }
-
-    private void generateBindViewMethod(StringBuilder builder) {
         builder.append("\n\n    @Override")
-                .append("\n     public void inject(")
+                .append("\n     public void inject(final ")
                 .append(getTypeFullName())
                 .append(" host,Object object) {");
-        for (VariableElement variableElement :
+        generateBindViewField(builder);
+        generateOnclickField(builder);
+        builder.append("\n   }");
+    }
+
+    private void generateBindViewField(StringBuilder builder) {
+
+        for (Integer id :
                 idMap.keySet()) {
-            int id = idMap.get(variableElement);
+            VariableElement variableElement=idMap.get(id);
             builder.append("\n       if(object instanceof android.app.Activity) {\n")
                     .append("           host.")
                     .append(variableElement.getSimpleName().toString())
@@ -69,7 +62,7 @@ public class Proxy {
                     .append("                   .findViewById(")
                     .append(id)
                     .append(");\n")
-                    .append("       } else {")
+                    .append("       } else {\n")
                     .append("           host.")
                     .append(variableElement.getSimpleName().toString())
                     .append(" = (")
@@ -78,12 +71,45 @@ public class Proxy {
                     .append("                   .findViewById(")
                     .append(id)
                     .append(");\n")
-                    .append("       }");
+                    .append("        }");
         }
-        builder.append("    \n}");
-    }
 
-    private void generateOnclickMethod(StringBuilder builder) {
+    }
+// host.textView.setOnClickListener(new OnClickListener() {
+//        @Override
+//        public void onClick(View v) {
+//            host.onclick(v);
+//        }
+//    });
+    private void generateOnclickField(StringBuilder builder) {
+        for (String name :
+                onclickMap.keySet()) {
+            List<Integer> list=onclickMap.get(name);
+            for (int i = 0; i < list.size(); i++) {
+                VariableElement variableElement=idMap.get(list.get(i));
+                if (variableElement!=null){
+                    builder.append("\n      host.")
+                            .append(variableElement.getSimpleName().toString())
+                            .append(".setOnClickListener(new android.view.View.OnClickListener() {\n")
+                            .append("        @Override")
+                            .append("\n           public void onClick(android.view.View v) {")
+                            .append("\n               host.")
+                            .append(name)
+                            .append("(v);\n")
+                            .append("           }\n")
+                            .append("       });");
+
+                }else {
+                    try {
+                        throw new Exception("view not bind");
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+
+            }
+
+        }
 
     }
 
